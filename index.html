@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lisa Alon | Eyebrow Artist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --surface-color: rgba(25, 25, 25, 0.6);
+            --gold: #d4af37;
+            --gold-hover: #f5cc47;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --glass-border: rgba(212, 175, 55, 0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Assistant', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #0a0a0a 100%);
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 450px;
+            height: 100vh;
+            max-height: 850px;
+            background: var(--surface-color);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 20px 10px;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(45deg, var(--gold), #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .screen {
+            flex: 1;
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            animation: fadeIn 0.4s ease forwards;
+            overflow-y: auto;
+        }
+
+        .screen.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Buttons */
+        .btn {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 16px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: auto;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover, .btn.primary {
+            background: var(--gold);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Calendar & Slots */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .day-header { color: var(--gold); font-weight: 600; font-size: 14px; }
+        
+        .day {
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.05);
+            transition: 0.2s;
+        }
+
+        .day:hover, .day.selected {
+            background: var(--gold);
+            color: var(--bg-color);
+        }
+
+        .day.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .slot {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .slot:hover, .slot.selected {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold);
+        }
+
+        /* Forms */
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 14px; }
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+        .input-group input:focus { border-color: var(--gold); }
+
+        /* Success Animation */
+        .success-icon {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--gold);
+            display: flex; align-items: center; justify-content: center;
+            margin: 40px auto;
+            font-size: 40px; color: var(--gold);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+        /* Admin UI */
+        .admin-dashboard { color: white; }
+        .appointment-card {
+            background: rgba(255,255,255,0.05);
+            padding: 15px; border-radius: 10px; margin-bottom: 10px;
+            border-left: 3px solid var(--gold);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <div class="logo" id="logoTitle">LISA ALON</div>
+        <div class="subtitle">Premium Eyebrow Artist</div>
+    </div>
+
+    <div id="screen-home" class="screen active" style="justify-content: center; align-items: center; text-align: center;">
+        <h2 style="margin-bottom: 20px; font-weight: 300;">הזמיני את התור שלך</h2>
+        <p style="color: var(--text-muted); margin-bottom: 40px;">חוויה של עיצוב גבות ברמה שעוד לא הכרת.</p>
+        <button class="btn primary" onclick="nav('screen-date')">קבעי תור עכשיו</button>
+    </div>
+
+    <div id="screen-date" class="screen">
+        <h3>בחירת תאריך</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">אוקטובר 2026</p>
+        <div class="calendar-grid" id="calendar"></div>
+        <button class="btn" style="margin-top: 30px;" onclick="nav('screen-time')" id="btn-date" disabled>המשך</button>
+    </div>
+
+    <div id="screen-time" class="screen">
+        <h3>בחירת שעה</h3>
+        <p style="color: var(--text-muted); font-size: 14px;" id="selected-date-display"></p>
+        <div class="slots-grid" id="slots"></div>
+        <div style="display:flex; gap:10px; margin-top: auto;">
+            <button class="btn" style="flex: 1; border-color: rgba(255,255,255,0.2); color: #fff;" onclick="nav('screen-date')">חזור</button>
+            <button class="btn primary" style="flex: 2;" onclick="nav('screen-details')" id="btn-time" disabled>המשך</button>
+        </div>
+    </div>
+
+    <div id="screen-details" class="screen">
+        <h3>פרטים אישיים</h3>
+        <div style="margin-top: 20px;">
+            <div class="input-group">
+                <label>שם מלא</label>
+                <input type="text" id="clientName" placeholder="למשל: שיר כהן">
+            </div>
+            <div class="input-group">
+                <label>מספר טלפון</label>
+                <input type="tel" id="clientPhone" placeholder="050-0000000">
+            </div>
+        </div>
+        <button class="btn primary" onclick="bookAppointment()">אישור קביעת תור</button>
+    </div>
+
+    <div id="screen-success" class="screen" style="text-align: center; justify-content: center;">
+        <div class="success-icon">✓</div>
+        <h2 style="color: var(--gold);">התור נקבע בהצלחה!</h2>
+        <p style="color: var(--text-muted); margin-top: 15px;" id="success-text"></p>
+        <button class="btn" style="margin-top: 40px;" onclick="nav('screen-home')">חזרה לראשי</button>
+    </div>
+
+    <div id="screen-admin-login" class="screen">
+        <h3 style="color: var(--gold);">כניסת מנהלת</h3>
+        <div class="input-group" style="margin-top: 20px;">
+            <label>סיסמה</label>
+            <input type="password" id="adminPass">
+        </div>
+        <button class="btn primary" onclick="loginAdmin()">התחברות</button>
+    </div>
+
+    <div id="screen-admin-dash" class="screen admin-dashboard">
+        <h3 style="color: var(--gold); margin-bottom: 20px;">לוח בקרה - ליסה</h3>
+        <div class="appointment-card">
+            <div>
+                <strong>שיר כהן</strong><br>
+                <span style="font-size: 12px; color: var(--text-muted);">24.05.2026 | 10:30 | 050-1234567</span>
+            </div>
+            <button style="background:none; border:none; color:red; cursor:pointer;">ביטול</button>
+        </div>
+        <button class="btn" style="margin-top: auto;" onclick="nav('screen-home')">יציאה</button>
+    </div>
+</div>
+
+<script>
+    // State
+    let bookingData = { date: null, time: null, name: '', phone: '' };
+
+    // Navigation
+    function nav(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        if(screenId === 'screen-time') generateSlots();
+    }
+
+    // Generate Calendar (Mock)
+    const calendar = document.getElementById('calendar');
+    const days = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+    days.forEach(d => {
+        let el = document.createElement('div');
+        el.className = 'day-header'; el.innerText = d;
+        calendar.appendChild(el);
+    });
+    
+    for (let i = 1; i <= 31; i++) {
+        let el = document.createElement('div');
+        el.className = 'day';
+        el.innerText = i;
+        // Make weekends disabled
+        if((i+5)%7 === 6 || (i+5)%7 === 0) el.classList.add('disabled');
+        else {
+            el.onclick = () => {
+                document.querySelectorAll('.day').forEach(d => d.classList.remove('selected'));
+                el.classList.add('selected');
+                bookingData.date = `${i}.10.2026`;
+                document.getElementById('selected-date-display').innerText = bookingData.date;
+                document.getElementById('btn-date').disabled = false;
+                document.getElementById('btn-date').classList.add('primary');
+            };
+        }
+        calendar.appendChild(el);
+    }
+
+    // Generate Time Slots
+    function generateSlots() {
+        const slotsContainer = document.getElementById('slots');
+        slotsContainer.innerHTML = '';
+        const times = ['10:00', '10:30', '11:00', '11:30', '12:00', '13:00', '13:30', '14:00', '15:30', '16:00', '16:30'];
+        times.forEach(time => {
+            let el = document.createElement('div');
+            el.className = 'slot';
+            el.innerText = time;
+            el.onclick = () => {
+                document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+                el.classList.add('selected');
+                bookingData.time = time;
+                document.getElementById('btn-time').disabled = false;
+            };
+            slotsContainer.appendChild(el);
+        });
+    }
+
+    // Book Appointment
+    function bookAppointment() {
+        bookingData.name = document.getElementById('clientName').value;
+        bookingData.phone = document.getElementById('clientPhone').value;
+        if(!bookingData.name || !bookingData.phone) return alert('נא למלא את כל הפרטים');
+        
+        // Here you would send data to the backend via fetch()
+        
+        document.getElementById('success-text').innerHTML = `${bookingData.name},<br>ניפגש ב-${bookingData.date} בשעה ${bookingData.time}`;
+        nav('screen-success');
+    }
+
+    // Secret Admin Login (Long press logo)
+    const logo = document.getElementById('logoTitle');
+    let pressTimer;
+    logo.addEventListener('mousedown', () => { pressTimer = window.setTimeout(() => nav('screen-admin-login'), 1500); });
+    logo.addEventListener('mouseup', () => { clearTimeout(pressTimer); });
+    logo.addEventListener('touchstart', () => { pressTimer = window.setTimeout(() => nav('screen-admin-login'), 1500); });
+    logo.addEventListener('touchend', () => { clearTimeout(pressTimer); });
+
+    function loginAdmin() {
+        if(document.getElementById('adminPass').value === 'lisa2026') nav('screen-admin-dash');
+        else alert('סיסמה שגויה');
+    }
+</script>
+</body>
+</html>
