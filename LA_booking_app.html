@@ -1,0 +1,715 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0a0a0a;color:#fff;min-height:100vh;direction:rtl}
+.gold{color:#C9A84C}
+.btn-gold{background:#C9A84C;color:#000;border:none;border-radius:999px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-gold:hover{filter:brightness(1.1);transform:scale(1.03)}
+.btn-outline{background:transparent;border:1.5px solid #C9A84C;color:#C9A84C;border-radius:999px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-outline:hover{background:rgba(201,168,76,.1)}
+.card{background:#111;border:1px solid #222;border-radius:18px;padding:20px}
+input,select{background:#0a0a0a;border:1px solid #333;border-radius:12px;color:#fff;padding:10px 14px;font-size:14px;width:100%;font-family:inherit;outline:none;transition:border .2s}
+input:focus,select:focus{border-color:#C9A84C}
+input[type=time]{color-scheme:dark}
+input[type=date]{color-scheme:dark}
+.tab-bar{display:flex;border-bottom:1px solid #222;background:#0a0a0a;position:sticky;top:0;z-index:10}
+.tab{padding:14px 20px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:6px;border-bottom:2px solid transparent;color:#666}
+.tab.active{color:#C9A84C;border-bottom-color:#C9A84C}
+.badge{font-size:11px;padding:3px 10px;border-radius:999px;font-weight:600}
+.badge-pending{background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.4)}
+.badge-approved{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.4)}
+.badge-cancelled{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.4)}
+.slot{border-radius:10px;padding:10px 4px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;border:1px solid #333;transition:all .2s;background:transparent;color:#fff;font-family:inherit}
+.slot:hover{border-color:#C9A84C}
+.slot.sel{background:#C9A84C;color:#000;border-color:#C9A84C}
+.slot.booked{background:rgba(239,68,68,.15);color:#ef4444;border-color:rgba(239,68,68,.3);cursor:default}
+.slot.free{background:rgba(34,197,94,.1);color:#22c55e;border-color:rgba(34,197,94,.25)}
+.day-btn{border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #333;background:transparent;color:#aaa;transition:all .2s;font-family:inherit}
+.day-btn.on{background:#C9A84C;color:#000;border-color:#C9A84C}
+.day-btn:hover:not(.on){border-color:#C9A84C}
+.cal-cell{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:all .15s;position:relative;border:1px solid transparent;font-weight:500}
+.cal-cell:hover{background:rgba(255,255,255,.07)}
+.cal-cell.sel{background:#C9A84C;color:#000;font-weight:700}
+.cal-cell.today:not(.sel){border-color:#C9A84C}
+.cal-cell.past{opacity:.3;cursor:default}
+.cal-cell.nonwork{opacity:.25;cursor:default}
+.dot{width:5px;height:5px;border-radius:50%;position:absolute;bottom:2px}
+.appt-row{background:#111;border:1px solid #222;border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;transition:border .2s}
+.appt-row:hover{border-color:#333}
+.btn-sm{font-size:11px;padding:5px 12px;border-radius:8px;cursor:pointer;font-weight:600;border:1px solid;transition:all .2s;font-family:inherit;background:transparent}
+.btn-approve{color:#22c55e;border-color:rgba(34,197,94,.4)}
+.btn-approve:hover{background:rgba(34,197,94,.15)}
+.btn-cancel{color:#ef4444;border-color:rgba(239,68,68,.4)}
+.btn-cancel:hover{background:rgba(239,68,68,.15)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal{background:#111;border:1px solid #2a2a2a;border-radius:20px;padding:24px;width:100%;max-width:380px;max-height:90vh;overflow-y:auto}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #1a1a1a;position:sticky;top:0;background:#0a0a0a;z-index:20}
+.section{max-width:480px;margin:0 auto;padding:24px 16px}
+.hero-title{font-weight:900;letter-spacing:.15em;line-height:1;font-size:clamp(80px,18vw,140px)}
+.stat-card{background:#111;border:1px solid #222;border-radius:16px;padding:20px}
+.chart-bar{border-radius:5px 5px 0 0;transition:height .3s}
+.step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;flex-shrink:0}
+.lbl{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:6px}
+textarea{background:#0a0a0a;border:1px solid #333;border-radius:12px;color:#fff;padding:10px 14px;font-size:14px;width:100%;font-family:inherit;outline:none;resize:none}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+const GOLD='#C9A84C';
+const PASS='LA2024';
+
+const defaultSettings={
+  workingDays:[0,1,2,3,4],
+  workingHours:{start:'09:00',end:'17:00'},
+  slotDuration:30,
+  blockedDates:[]
+};
+
+const T={
+  he:{
+    appName:'LA',tagline:'חוויית יופי מושלמת',heroSub:'הזמן תור בקלות, מהיר ובלי המתנה',
+    bookNow:'קבע תור עכשיו',viewMyAppts:'התורים שלי',
+    selectDate:'בחר תאריך',selectTime:'בחר שעה',yourDetails:'הפרטים שלך',
+    name:'שם מלא',phone:'מספר טלפון',
+    confirmBooking:'אשר הזמנה',bookingConfirmed:'התור נקבע!',
+    confirmMsg:'קיבלנו את בקשתך. נצלצל אם יהיה שינוי.',
+    bookAnother:'קבע תור נוסף',
+    myAppointments:'התורים שלי',enterPhone:'הכנס מספר טלפון לצפייה בתורים',
+    noAppts:'אין תורים פעילים',cancelAppt:'בטל תור',
+    cannotCancel:'לא ניתן לבטל פחות מ-24 שעות לפני התור',
+    pending:'ממתין',approved:'אושר',cancelled:'בוטל',
+    adminLink:'מנהל',adminLogin:'כניסת מנהל',password:'סיסמה',
+    login:'כניסה',wrongPass:'סיסמה שגויה',logout:'יציאה',
+    overview:'סקירה',calendar:'לוח שנה',appointments:'תורים',settings:'הגדרות',
+    workingDays:'ימי עבודה',workingHours:'שעות עבודה',slotDuration:'משך תור',
+    minutes:'דקות',from:'מ',to:'עד',blockedDates:'תאריכים חסומים',
+    totalToday:'היום',totalWeek:'השבוע',totalMonth:'החודש',peakHour:'שעת שיא',
+    approve:'אשר',cancel:'בטל',addManual:'הוסף תור',save:'שמור',saved:'נשמר!',
+    days:['א','ב','ג','ד','ה','ו','ש'],
+    dayNames:['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],
+    months:['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'],
+    available:'פנוי',booked:'תפוס',blocked:'חסום',
+    back:'חזור',next:'הבא',search:'חפש',date:'תאריך',time:'שעה',
+    noSlots:'אין שעות פנויות ביום זה',lang:'EN',
+    todayAppts:'תורים היום',nonWork:'יום לא עבודה',
+    defPass:'סיסמה: LA2024',
+    week7:'7 ימים אחרונים',noToday:'אין תורים היום',
+    bookFor:'הזמנה ל',at:'בשעה',prem:'✦ Premium Salon ✦',
+    lookupBtn:'הצג תורים',backBtn:'חזרה',addBlock:'הוסף חסימה',
+    partial:'חלקי'
+  },
+  en:{
+    appName:'LA',tagline:'Premium Beauty Experience',heroSub:'Book appointments easily, fast and hassle-free',
+    bookNow:'Book Now',viewMyAppts:'My Appointments',
+    selectDate:'Select Date',selectTime:'Select Time',yourDetails:'Your Details',
+    name:'Full Name',phone:'Phone Number',
+    confirmBooking:'Confirm Booking',bookingConfirmed:'Booking Confirmed!',
+    confirmMsg:"We received your request. We'll call if anything changes.",
+    bookAnother:'Book Another',
+    myAppointments:'My Appointments',enterPhone:'Enter your phone to view appointments',
+    noAppts:'No active appointments',cancelAppt:'Cancel Appointment',
+    cannotCancel:'Cannot cancel less than 24h before appointment',
+    pending:'Pending',approved:'Approved',cancelled:'Cancelled',
+    adminLink:'Admin',adminLogin:'Admin Login',password:'Password',
+    login:'Login',wrongPass:'Wrong password',logout:'Logout',
+    overview:'Overview',calendar:'Calendar',appointments:'Appointments',settings:'Settings',
+    workingDays:'Working Days',workingHours:'Working Hours',slotDuration:'Slot Duration',
+    minutes:'min',from:'From',to:'To',blockedDates:'Blocked Dates',
+    totalToday:'Today',totalWeek:'This Week',totalMonth:'Month',peakHour:'Peak Hour',
+    approve:'Approve',cancel:'Cancel',addManual:'Add Appointment',save:'Save',saved:'Saved!',
+    days:['S','M','T','W','T','F','S'],
+    dayNames:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+    months:['January','February','March','April','May','June','July','August','September','October','November','December'],
+    available:'Available',booked:'Booked',blocked:'Blocked',
+    back:'Back',next:'Next',search:'Search',date:'Date',time:'Time',
+    noSlots:'No slots available on this day',lang:'עב',
+    todayAppts:"Today's Appointments",nonWork:'Non-working day',
+    defPass:'Password: LA2024',
+    week7:'Last 7 days',noToday:'No appointments today',
+    bookFor:'Booking for',at:'at',prem:'✦ Premium Salon ✦',
+    lookupBtn:'Show Appointments',backBtn:'Back',addBlock:'Add Block',
+    partial:'Partial'
+  }
+};
+
+let lang='he';
+let view='client'; // client|adminlogin|admin
+let step='home'; // home|date|time|form|done|myappts
+let settings=JSON.parse(JSON.stringify(defaultSettings));
+let appointments=[];
+let selDate=null,selTime=null,clientName='',clientPhone='';
+let myPhone='',myAppts=null,cancelMsg='';
+let adminTab='overview';
+let calViewDate={y:new Date().getFullYear(),m:new Date().getMonth()};
+let adminCalSel=null;
+let localSettings=null;
+let searchQ='';
+let showAddModal=false;
+let saveFlash=false;
+let newBlock='';
+let adminPassInput='';
+let showPass=false;
+let loginErr=false;
+let adminCalViewDate={y:new Date().getFullYear(),m:new Date().getMonth()};
+
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function dateToStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function dispDate(ds){if(!ds)return'';const[y,m,d]=ds.split('-');return d+'/'+m+'/'+y}
+
+function genSlots(start,end,dur){
+  const s=[];const[sh,sm]=start.split(':').map(Number);const[eh,em]=end.split(':').map(Number);
+  let cur=sh*60+sm;const endM=eh*60+em;
+  while(cur+dur<=endM){s.push(String(Math.floor(cur/60)).padStart(2,'0')+':'+String(cur%60).padStart(2,'0'));cur+=dur;}
+  return s;
+}
+function within24h(ds,ts){try{return(new Date(ds+'T'+ts)-new Date())<86400000}catch{return true}}
+function bookedOnDate(ds){return appointments.filter(a=>a.date===ds&&a.status!=='cancelled').map(a=>a.time)}
+function freeSlots(ds){const all=genSlots(settings.workingHours.start,settings.workingHours.end,settings.slotDuration);const b=bookedOnDate(ds);return all.filter(s=>!b.includes(s))}
+
+async function loadData(){
+  try{const r=await window.storage.get('la-s');if(r)settings=JSON.parse(r.value);}catch{}
+  try{const r=await window.storage.get('la-a');if(r)appointments=JSON.parse(r.value);}catch{}
+  try{const r=await window.storage.get('la-adm');if(r&&JSON.parse(r.value)){view='admin';localSettings=JSON.parse(JSON.stringify(settings));}}catch{}
+  render();
+}
+async function saveSettings(){try{await window.storage.set('la-s',JSON.stringify(settings));}catch{}}
+async function saveAppts(){try{await window.storage.set('la-a',JSON.stringify(appointments));}catch{}}
+
+function genId(){return Math.random().toString(36).substr(2,9)+Date.now().toString(36).substr(-4)}
+
+const t=()=>lang==='he'?T.he:T.en;
+const dir=()=>lang==='he'?'rtl':'ltr';
+
+function getDayInfo(ds){
+  const dow=new Date(ds+'T12:00:00').getDay();
+  if(!settings.workingDays.includes(dow))return'nonwork';
+  if((settings.blockedDates||[]).includes(ds))return'blocked';
+  const all=genSlots(settings.workingHours.start,settings.workingHours.end,settings.slotDuration);
+  const cnt=appointments.filter(a=>a.date===ds&&a.status!=='cancelled').length;
+  if(cnt===0)return'free';if(cnt>=all.length)return'full';return'partial';
+}
+
+function render(){
+  const app=document.getElementById('app');
+  app.dir=dir();
+  if(view==='client')app.innerHTML=renderClient();
+  else if(view==='adminlogin')app.innerHTML=renderAdminLogin();
+  else app.innerHTML=renderAdmin();
+  bindEvents();
+}
+
+function renderNav(showBack,backTo){
+  const tt=t();
+  return`<div class="nav">
+    ${showBack?`<button onclick="navBack('${backTo}')" style="background:transparent;border:none;color:#888;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:13px;font-family:inherit">
+      <i class="ti ti-arrow-${dir()==='rtl'?'right':'left'}" aria-hidden="true"></i>${tt.back}</button>`:'<div></div>'}
+    <span class="gold" style="font-size:22px;font-weight:900;letter-spacing:.2em">LA</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button onclick="toggleLang()" style="font-size:11px;padding:4px 10px;border-radius:999px;border:1px solid #333;color:#888;background:transparent;cursor:pointer;font-family:inherit">${tt.lang}</button>
+      ${!showBack?`<button onclick="goAdminLogin()" style="background:transparent;border:none;color:#555;cursor:pointer" title="${tt.adminLink}"><i class="ti ti-lock" aria-hidden="true" style="font-size:18px"></i></button>`:''}
+    </div>
+  </div>`;
+}
+
+function renderClient(){
+  const tt=t();
+  if(step==='home')return renderHome();
+  if(step==='myappts')return renderMyAppts();
+  if(step==='date')return renderDateStep();
+  if(step==='time')return renderTimeStep();
+  if(step==='form')return renderFormStep();
+  if(step==='done')return renderDoneStep();
+  return'';
+}
+
+function renderHome(){
+  const tt=t();
+  return`${renderNav(false)}
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 60px);text-align:center;padding:24px 20px">
+    <p style="font-size:11px;letter-spacing:.4em;color:${GOLD};margin-bottom:16px">${tt.prem}</p>
+    <div class="hero-title gold" style="background:linear-gradient(135deg,#fff 0%,${GOLD} 50%,#fff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px">LA</div>
+    <p style="font-size:18px;color:#888;font-weight:300;margin-bottom:6px">${tt.tagline}</p>
+    <p style="font-size:13px;color:#555;margin-bottom:40px">${tt.heroSub}</p>
+    <div style="display:flex;flex-direction:column;gap:14px;align-items:center">
+      <button class="btn-gold" onclick="setStep('date')" style="font-size:15px;padding:14px 36px">${tt.bookNow}</button>
+      <button class="btn-outline" onclick="setStep('myappts')" style="font-size:14px;padding:12px 32px">${tt.viewMyAppts}</button>
+    </div>
+  </div>`;
+}
+
+function renderMyAppts(){
+  const tt=t();
+  let content='';
+  if(myAppts===null){
+    content=`<div class="card">
+      <p style="font-size:13px;color:#666;margin-bottom:14px;text-align:center">${tt.enterPhone}</p>
+      <input id="myPhoneInp" value="${myPhone}" placeholder="050-0000000" dir="ltr" style="text-align:center;letter-spacing:.1em;font-size:16px;margin-bottom:12px">
+      <button class="btn-gold" onclick="doLookup()" style="width:100%;padding:12px;font-size:14px;border-radius:12px">${tt.lookupBtn}</button>
+    </div>`;
+  } else {
+    let rows='';
+    if(cancelMsg)rows+=`<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:10px;margin-bottom:12px;color:#ef4444;font-size:12px;text-align:center">${cancelMsg}</div>`;
+    if(myAppts.length===0){
+      rows+=`<div style="text-align:center;padding:48px 0">
+        <i class="ti ti-calendar" aria-hidden="true" style="font-size:48px;color:#333;display:block;margin-bottom:12px"></i>
+        <p style="color:#555">${tt.noAppts}</p>
+      </div>`;
+    } else {
+      myAppts.forEach(a=>{
+        const past=within24h(a.date,a.time);
+        rows+=`<div class="card" style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <p style="font-size:12px;color:#555;margin-bottom:4px">${dispDate(a.date)}</p>
+              <p style="font-size:28px;font-weight:900;color:${GOLD}">${a.time}</p>
+              <p style="font-size:14px;margin-top:4px">${a.clientName}</p>
+            </div>
+            <div style="text-align:end">
+              <span class="badge badge-${a.status}">${tt[a.status]}</span>
+              ${a.status!=='cancelled'?(past?`<p style="font-size:10px;color:#555;margin-top:8px;max-width:110px">${tt.cannotCancel}</p>`:`<button onclick="doCancel('${a.id}')" style="font-size:11px;color:#ef4444;background:transparent;border:none;cursor:pointer;margin-top:8px;font-family:inherit;display:block">${tt.cancelAppt}</button>`):''}
+            </div>
+          </div>
+        </div>`;
+      });
+    }
+    rows+=`<button onclick="resetLookup()" style="width:100%;margin-top:6px;padding:12px;border-radius:12px;border:1px solid #333;background:transparent;color:#666;font-size:13px;cursor:pointer;font-family:inherit">← ${tt.backBtn}</button>`;
+    content=rows;
+  }
+  return`${renderNav(true,'home')}<div class="section">
+    <h2 style="font-size:22px;font-weight:700;margin-bottom:24px;text-align:center">${tt.myAppointments}</h2>
+    ${content}
+  </div>`;
+}
+
+function renderCalendar(selD,onselFn,isAdmin=false,vDate=null){
+  const tt=t();
+  const v=vDate||calViewDate;
+  const today=todayStr();
+  const dim=new Date(v.y,v.m+1,0).getDate();
+  const fd=new Date(v.y,v.m,1).getDay();
+  let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <button onclick="${isAdmin?'adminCalPrev()':'calPrev()'}" style="width:34px;height:34px;border-radius:50%;border:1px solid #333;background:transparent;color:#888;cursor:pointer;font-size:16px">‹</button>
+    <span style="font-weight:700;font-size:15px">${tt.months[v.m]} ${v.y}</span>
+    <button onclick="${isAdmin?'adminCalNext()':'calNext()'}" style="width:34px;height:34px;border-radius:50%;border:1px solid #333;background:transparent;color:#888;cursor:pointer;font-size:16px">›</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">`;
+  tt.days.forEach(d=>{html+=`<div style="text-align:center;font-size:11px;color:#555;padding:4px;font-weight:600">${d}</div>`;});
+  html+='</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">';
+  for(let i=0;i<fd;i++)html+='<div></div>';
+  for(let day=1;day<=dim;day++){
+    const ds=v.y+'-'+String(v.m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    const isPast=ds<today,isToday=ds===today,isSel=ds===selD;
+    const info=getDayInfo(ds);
+    const dotCol={free:'#22c55e',partial:GOLD,full:'#ef4444',blocked:'#555',nonwork:'#333'}[info]||'#333';
+    const clickable=!isPast&&info!=='nonwork'&&info!=='blocked'&&(isAdmin||info!=='full');
+    const classes=['cal-cell'];
+    if(isSel)classes.push('sel');
+    if(isToday&&!isSel)classes.push('today');
+    if(isPast||info==='nonwork')classes.push('past');
+    html+=`<div class="${classes.join(' ')}" onclick="${clickable?onselFn+'(\''+ds+'\')':''}" style="${!clickable&&!isPast&&info!=='nonwork'?'cursor:default;':''}">
+      ${day}
+      ${!isSel&&!isPast&&info!=='nonwork'?`<span class="dot" style="background:${dotCol}"></span>`:''}
+    </div>`;
+  }
+  html+='</div><div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;justify-content:center">';
+  [{c:'#22c55e',l:tt.available},{c:GOLD,l:tt.partial},{c:'#ef4444',l:tt.booked},{c:'#555',l:tt.blocked}].forEach(x=>{
+    html+=`<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#555"><span style="width:8px;height:8px;border-radius:50%;background:${x.c};display:inline-block"></span>${x.l}</span>`;
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderDateStep(){
+  const tt=t();
+  return`${renderNav(true,'home')}<div class="section">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+      <div class="step-dot" style="background:${GOLD}"style="flex-shrink:0">1</div>
+      <h2 style="font-size:20px;font-weight:700">${tt.selectDate}</h2>
+      <span style="font-size:12px;color:#555;margin-${dir()==='rtl'?'right':'left'}:auto">1/3</span>
+    </div>
+    <div class="card">${renderCalendar(selDate,'clientSelDate')}</div>
+    ${selDate?`<button class="btn-gold" onclick="setStep('time')" style="width:100%;margin-top:16px;padding:14px;font-size:15px">${tt.next} →</button>`:''}
+  </div>`;
+}
+
+function renderTimeStep(){
+  const tt=t();
+  const slots=freeSlots(selDate);
+  let shtml='';
+  if(slots.length===0){
+    shtml=`<div style="text-align:center;padding:48px 0">
+      <i class="ti ti-clock" aria-hidden="true" style="font-size:48px;color:#333;display:block;margin-bottom:12px"></i>
+      <p style="color:#666">${tt.noSlots}</p>
+      <button onclick="setStep('date')" style="margin-top:12px;font-size:12px;color:${GOLD};background:transparent;border:none;cursor:pointer;font-family:inherit">${tt.back}</button>
+    </div>`;
+  } else {
+    shtml=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">`;
+    slots.forEach(s=>{shtml+=`<button class="slot${selTime===s?' sel':''}" onclick="selTimeClick('${s}')">${s}</button>`;});
+    shtml+='</div>';
+    if(selTime)shtml+=`<button class="btn-gold" onclick="setStep('form')" style="width:100%;margin-top:20px;padding:14px;font-size:15px">${tt.next} →</button>`;
+  }
+  return`${renderNav(true,'date')}<div class="section">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <div class="step-dot" style="background:${GOLD}">2</div>
+      <h2 style="font-size:20px;font-weight:700">${tt.selectTime}</h2>
+      <span style="font-size:12px;color:#555;margin-${dir()==='rtl'?'right':'left'}:auto">2/3</span>
+    </div>
+    <p style="font-size:13px;color:#555;margin-bottom:20px;margin-${dir()==='rtl'?'right':'left'}:38px">${dispDate(selDate)}</p>
+    ${shtml}
+  </div>`;
+}
+
+function renderFormStep(){
+  const tt=t();
+  return`${renderNav(true,'time')}<div class="section">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div class="step-dot" style="background:${GOLD}">3</div>
+      <h2 style="font-size:20px;font-weight:700">${tt.yourDetails}</h2>
+      <span style="font-size:12px;color:#555;margin-${dir()==='rtl'?'right':'left'}:auto">3/3</span>
+    </div>
+    <div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:12px;padding:12px;margin-bottom:16px">
+      <p style="color:${GOLD};font-size:13px">📅 ${dispDate(selDate)} &nbsp;·&nbsp; ⏰ ${selTime}</p>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <label class="lbl">${tt.name}</label>
+      <div style="display:flex;align-items:center;border:1px solid #333;border-radius:12px;padding:10px 14px;margin-bottom:14px;transition:border .2s" id="nameWrap">
+        <i class="ti ti-user" aria-hidden="true" style="color:#555;font-size:16px;margin-${dir()==='rtl'?'left':'right'}:10px"></i>
+        <input id="nameInp" value="${clientName}" placeholder="..." style="border:none;padding:0;border-radius:0;background:transparent;flex:1" oninput="clientName=this.value;updateConfirmBtn()">
+      </div>
+      <label class="lbl">${tt.phone}</label>
+      <div style="display:flex;align-items:center;border:1px solid #333;border-radius:12px;padding:10px 14px;transition:border .2s">
+        <i class="ti ti-phone" aria-hidden="true" style="color:#555;font-size:16px;margin-${dir()==='rtl'?'left':'right'}:10px"></i>
+        <input id="phoneInp" value="${clientPhone}" placeholder="050-0000000" type="tel" dir="ltr" style="border:none;padding:0;border-radius:0;background:transparent;flex:1" oninput="clientPhone=this.value;updateConfirmBtn()">
+      </div>
+    </div>
+    <button class="btn-gold" id="confirmBtn" onclick="doBook()" style="width:100%;padding:14px;font-size:15px;opacity:${clientName.trim()&&clientPhone.trim()?1:.4}">${tt.confirmBooking}</button>
+  </div>`;
+}
+
+function renderDoneStep(){
+  const tt=t();
+  return`${renderNav(false)}<div class="section" style="text-align:center;padding-top:60px">
+    <div style="width:100px;height:100px;border-radius:50%;border:2px solid ${GOLD};background:rgba(201,168,76,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 24px">
+      <i class="ti ti-check" aria-hidden="true" style="font-size:44px;color:${GOLD}"></i>
+    </div>
+    <h2 style="font-size:26px;font-weight:700;margin-bottom:8px">${tt.bookingConfirmed}</h2>
+    <p style="color:#666;margin-bottom:28px;font-size:14px">${tt.confirmMsg}</p>
+    <div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:16px;padding:20px;margin-bottom:28px">
+      <p style="font-size:36px;font-weight:900;color:${GOLD}">${selTime}</p>
+      <p style="font-size:16px;font-weight:600;margin-top:4px">${dispDate(selDate)}</p>
+      <p style="font-size:13px;color:#555;margin-top:6px">${clientName} · ${clientPhone}</p>
+    </div>
+    <button class="btn-gold" onclick="resetBooking()" style="padding:14px 36px;font-size:14px">${tt.bookAnother}</button>
+  </div>`;
+}
+
+function renderAdminLogin(){
+  const tt=t();
+  return`<div class="nav"><button onclick="view='client';render()" style="background:transparent;border:none;color:#888;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:13px;font-family:inherit"><i class="ti ti-arrow-${dir()==='rtl'?'right':'left'}" aria-hidden="true"></i>${tt.back}</button><span class="gold" style="font-size:22px;font-weight:900;letter-spacing:.2em">LA</span><div></div></div>
+  <div style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 60px);padding:24px">
+    <div style="width:100%;max-width:300px">
+      <div style="text-align:center;margin-bottom:32px">
+        <div class="gold" style="font-size:56px;font-weight:900;letter-spacing:.2em;margin-bottom:8px">LA</div>
+        <p style="font-size:11px;color:#555;letter-spacing:.2em;text-transform:uppercase">${tt.adminLogin}</p>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;border:1px solid ${loginErr?'#ef4444':'#333'};border-radius:12px;padding:10px 14px;margin-bottom:${loginErr?'6px':'16px'};transition:border .2s" id="passWrap">
+          <i class="ti ti-lock" aria-hidden="true" style="color:#555;font-size:15px;margin-${dir()==='rtl'?'left':'right'}:10px"></i>
+          <input id="passInp" type="${showPass?'text':'password'}" value="${adminPassInput}" placeholder="${tt.password}" dir="ltr" style="border:none;padding:0;border-radius:0;background:transparent;flex:1" oninput="adminPassInput=this.value" onkeydown="if(event.key==='Enter')doLogin()">
+          <button onclick="showPass=!showPass;render()" style="background:transparent;border:none;color:#555;cursor:pointer;padding:0">
+            <i class="ti ti-eye${showPass?'-off':''}" aria-hidden="true" style="font-size:15px"></i>
+          </button>
+        </div>
+        ${loginErr?`<p style="font-size:12px;color:#ef4444;margin-bottom:12px">${tt.wrongPass}</p>`:''}
+        <button class="btn-gold" onclick="doLogin()" style="width:100%;padding:12px;font-size:14px;border-radius:12px;${!adminPassInput?'opacity:.4;cursor:not-allowed':''}">${tt.login}</button>
+      </div>
+      <p style="text-align:center;font-size:11px;color:#333;margin-top:16px">${tt.defPass}</p>
+    </div>
+  </div>`;
+}
+
+function renderAdmin(){
+  const tt=t();
+  if(!localSettings)localSettings=JSON.parse(JSON.stringify(settings));
+  const tabs=[
+    {id:'overview',icon:'ti-chart-bar',label:tt.overview},
+    {id:'calendar',icon:'ti-calendar',label:tt.calendar},
+    {id:'appointments',icon:'ti-list',label:tt.appointments},
+    {id:'settings',icon:'ti-settings',label:tt.settings},
+  ];
+  let tabHtml=`<div class="nav">
+    <span class="gold" style="font-size:18px;font-weight:900;letter-spacing:.2em">LA · Admin</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button onclick="toggleLang()" style="font-size:11px;padding:4px 10px;border-radius:999px;border:1px solid #333;color:#888;background:transparent;cursor:pointer;font-family:inherit">${tt.lang}</button>
+      <button onclick="doLogout()" style="background:transparent;border:none;color:#666;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px;font-family:inherit"><i class="ti ti-logout" aria-hidden="true"></i>${tt.logout}</button>
+    </div>
+  </div>
+  <div class="tab-bar" style="overflow-x:auto">`;
+  tabs.forEach(tb=>{tabHtml+=`<div class="tab${adminTab===tb.id?' active':''}" onclick="adminTab='${tb.id}';render()"><i class="ti ${tb.icon}" aria-hidden="true"></i>${tb.label}</div>`;});
+  tabHtml+='</div>';
+
+  let content='';
+  if(adminTab==='overview')content=renderAdminOverview();
+  else if(adminTab==='calendar')content=renderAdminCalendar();
+  else if(adminTab==='appointments')content=renderAdminAppts();
+  else content=renderAdminSettings();
+
+  return tabHtml+`<div style="max-width:900px;margin:0 auto;padding:24px 14px">${content}</div>`
+    +(showAddModal?renderAddModal():'');
+}
+
+function renderAdminOverview(){
+  const tt=t();
+  const today=todayStr();
+  const wd=getWeekDates();
+  const tm=today.slice(0,7);
+  const todayA=appointments.filter(a=>a.date===today&&a.status!=='cancelled');
+  const weekA=appointments.filter(a=>wd.includes(a.date)&&a.status!=='cancelled');
+  const monA=appointments.filter(a=>a.date.startsWith(tm)&&a.status!=='cancelled');
+  const hb={};appointments.forEach(a=>{if(a.status!=='cancelled'&&a.time){const h=a.time.slice(0,2);hb[h]=(hb[h]||0)+1;}});
+  const peak=Object.entries(hb).sort((a,b)=>b[1]-a[1])[0];
+  const stats=[
+    {l:tt.totalToday,v:todayA.length,i:'ti-calendar'},
+    {l:tt.totalWeek,v:weekA.length,i:'ti-chart-bar'},
+    {l:tt.totalMonth,v:monA.length,i:'ti-users'},
+    {l:tt.peakHour,v:peak?peak[0]+':00':'—',i:'ti-clock'},
+  ];
+  let html=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px">`;
+  stats.forEach(s=>{html+=`<div class="stat-card"><i class="ti ${s.i}" aria-hidden="true" style="font-size:20px;color:${GOLD};margin-bottom:10px;display:block"></i><p style="font-size:28px;font-weight:900">${s.v}</p><p style="font-size:11px;color:#555;margin-top:4px;text-transform:uppercase;letter-spacing:.06em">${s.l}</p></div>`;});
+  html+='</div>';
+
+  // Chart
+  const cd=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);const ds=dateToStr(d);return{day:d.getDate()+'/'+(d.getMonth()+1),count:appointments.filter(a=>a.date===ds&&a.status!=='cancelled').length};});
+  const mx=Math.max(...cd.map(x=>x.count),1);
+  html+=`<div class="card" style="margin-bottom:20px"><p style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px">${tt.week7}</p>
+    <div style="display:flex;align-items:flex-end;gap:6px;height:120px">`;
+  cd.forEach((d,i)=>{const h=Math.max(8,Math.round((d.count/mx)*100));const isLast=i===cd.length-1;
+    html+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div class="chart-bar" style="width:100%;height:${h}px;background:${isLast?GOLD:'#222'};border-radius:4px 4px 0 0" title="${d.count}"></div>
+      <p style="font-size:10px;color:#555">${d.day}</p>
+    </div>`;});
+  html+='</div></div>';
+
+  // Today's appts
+  html+=`<div class="card"><p style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px">${tt.todayAppts}</p>`;
+  if(todayA.length===0)html+=`<p style="color:#444;font-size:13px;text-align:center;padding:24px 0">${tt.noToday}</p>`;
+  else [...todayA].sort((a,b)=>a.time.localeCompare(b.time)).forEach(a=>{
+    html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1a1a1a">
+      <div style="display:flex;align-items:center;gap:14px">
+        <span style="color:${GOLD};font-size:20px;font-weight:900;width:52px;flex-shrink:0">${a.time}</span>
+        <div><p style="font-size:14px;font-weight:600">${a.clientName}</p><p style="font-size:12px;color:#555">${a.phone}</p></div>
+      </div>
+      <span class="badge badge-${a.status}">${tt[a.status]}</span>
+    </div>`;
+  });
+  html+='</div>';
+  return html;
+}
+
+function getWeekDates(){const d=new Date();const day=d.getDay();const s=new Date(d);s.setDate(d.getDate()-day);return Array.from({length:7},(_,i)=>{const dd=new Date(s);dd.setDate(s.getDate()+i);return dateToStr(dd);});}
+
+function renderAdminCalendar(){
+  const tt=t();
+  let html=`<h2 style="font-size:20px;font-weight:700;margin-bottom:16px">${tt.calendar}</h2>
+  <div class="card" style="margin-bottom:16px">${renderCalendar(adminCalSel,'adminSelCal',true,adminCalViewDate)}</div>`;
+  if(adminCalSel){
+    const dow=new Date(adminCalSel+'T12:00:00').getDay();
+    const isWork=settings.workingDays.includes(dow);
+    const isBlocked=(settings.blockedDates||[]).includes(adminCalSel);
+    html+=`<div class="card"><p style="font-size:15px;font-weight:700;color:${GOLD};margin-bottom:12px">${dispDate(adminCalSel)}</p>`;
+    if(!isWork||isBlocked){html+=`<p style="color:#555;font-size:13px">${!isWork?tt.nonWork:tt.blocked}</p>`;}
+    else{
+      const all=genSlots(settings.workingHours.start,settings.workingHours.end,settings.slotDuration);
+      html+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">`;
+      all.forEach(sl=>{
+        const appt=appointments.find(a=>a.date===adminCalSel&&a.time===sl&&a.status!=='cancelled');
+        html+=`<div class="slot${appt?' booked':' free'}" style="cursor:default" title="${appt?appt.clientName+' · '+appt.phone:tt.available}">
+          <div>${sl}</div>
+          ${appt?`<div style="font-size:10px;color:#ef4444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60px">${appt.clientName.split(' ')[0]}</div>`:''}
+        </div>`;
+      });
+      html+='</div>';
+    }
+    html+='</div>';
+  }
+  return html;
+}
+
+function renderAdminAppts(){
+  const tt=t();
+  const filtered=[...appointments]
+    .filter(a=>!searchQ||a.clientName?.toLowerCase().includes(searchQ.toLowerCase())||a.phone?.includes(searchQ)||a.date?.includes(searchQ))
+    .sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+  let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+    <h2 style="font-size:20px;font-weight:700">${tt.appointments}</h2>
+    <button class="btn-gold" onclick="showAddModal=true;render()" style="font-size:13px;padding:10px 18px;border-radius:12px;display:flex;align-items:center;gap:6px">
+      <i class="ti ti-plus" aria-hidden="true"></i>${tt.addManual}
+    </button>
+  </div>
+  <div style="display:flex;align-items:center;border:1px solid #222;border-radius:12px;padding:10px 14px;margin-bottom:14px;background:#111">
+    <i class="ti ti-search" aria-hidden="true" style="color:#555;font-size:16px;margin-${dir()==='rtl'?'left':'right'}:10px"></i>
+    <input value="${searchQ}" placeholder="${tt.search}..." oninput="searchQ=this.value;render()" style="border:none;padding:0;border-radius:0;background:transparent;flex:1">
+  </div>`;
+  if(filtered.length===0){
+    html+=`<div style="text-align:center;padding:48px 0;color:#444"><i class="ti ti-list" aria-hidden="true" style="font-size:48px;display:block;margin-bottom:12px"></i>${tt.noAppts}</div>`;
+  } else {
+    filtered.forEach(a=>{
+      html+=`<div class="appt-row" style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="color:${GOLD};text-align:center;width:60px;flex-shrink:0">
+            <p style="font-size:20px;font-weight:900">${a.time}</p>
+            <p style="font-size:11px;color:#555">${dispDate(a.date)}</p>
+          </div>
+          <div>
+            <p style="font-size:14px;font-weight:600">${a.clientName}</p>
+            <p style="font-size:12px;color:#666;display:flex;align-items:center;gap:4px"><i class="ti ti-phone" aria-hidden="true" style="font-size:13px"></i>${a.phone}</p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+          <span class="badge badge-${a.status}">${tt[a.status]}</span>
+          ${a.status==='pending'?`<button class="btn-sm btn-approve" onclick="doApprove('${a.id}')"><i class="ti ti-check" aria-hidden="true"></i> ${tt.approve}</button>`:''}
+          ${a.status!=='cancelled'?`<button class="btn-sm btn-cancel" onclick="doCancelAdmin('${a.id}')"><i class="ti ti-x" aria-hidden="true"></i> ${tt.cancel}</button>`:''}
+        </div>
+      </div>`;
+    });
+  }
+  return html;
+}
+
+function renderAdminSettings(){
+  const tt=t();
+  const ls=localSettings;
+  let html=`<h2 style="font-size:20px;font-weight:700;margin-bottom:16px">${tt.settings}</h2>
+  <div class="card" style="margin-bottom:12px">
+    <p class="lbl" style="margin-bottom:12px">${tt.workingDays}</p>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">`;
+  tt.dayNames.forEach((name,i)=>{const on=ls.workingDays.includes(i);html+=`<button class="day-btn${on?' on':''}" onclick="toggleDay(${i})">${name}</button>`;});
+  html+=`</div></div>
+  <div class="card" style="margin-bottom:12px">
+    <p class="lbl" style="margin-bottom:12px">${tt.workingHours}</p>
+    <div style="display:flex;gap:12px;align-items:flex-end">
+      <div style="flex:1"><label class="lbl">${tt.from}</label><input type="time" value="${ls.workingHours.start}" onchange="localSettings.workingHours.start=this.value"></div>
+      <div style="padding-bottom:10px;color:#555">—</div>
+      <div style="flex:1"><label class="lbl">${tt.to}</label><input type="time" value="${ls.workingHours.end}" onchange="localSettings.workingHours.end=this.value"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <p class="lbl" style="margin-bottom:12px">${tt.slotDuration}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">`;
+  [15,30,45,60].forEach(d=>{const on=ls.slotDuration===d;html+=`<button class="day-btn${on?' on':''}" onclick="localSettings.slotDuration=${d};render()">${d} ${tt.minutes}</button>`;});
+  html+=`</div></div>
+  <div class="card" style="margin-bottom:20px">
+    <p class="lbl" style="margin-bottom:12px">${tt.blockedDates}</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input type="date" value="${newBlock}" onchange="newBlock=this.value" style="flex:1">
+      <button onclick="addBlock()" style="padding:10px 14px;border-radius:12px;border:1px solid #333;background:${GOLD};color:#000;cursor:pointer;font-size:18px;font-weight:700">+</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">`;
+  (ls.blockedDates||[]).sort().forEach(d=>{html+=`<div style="display:flex;align-items:center;gap:6px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:5px 10px;font-size:12px">${dispDate(d)}<button onclick="removeBlock('${d}')" style="background:transparent;border:none;color:#555;cursor:pointer;font-size:14px">×</button></div>`;});
+  html+=`</div></div>
+  <button onclick="doSaveSettings()" style="width:100%;padding:14px;border-radius:14px;border:none;background:${saveFlash?'#22c55e':GOLD};color:#000;font-size:15px;font-weight:700;cursor:pointer;transition:background .3s;font-family:inherit">
+    ${saveFlash?`<i class="ti ti-check" aria-hidden="true"></i> ${tt.saved}`:tt.save}
+  </button>`;
+  return html;
+}
+
+function renderAddModal(){
+  const tt=t();
+  const addDate=window._addDate||todayStr();
+  const addTime=window._addTime||'';
+  const addName=window._addName||'';
+  const addPhone=window._addPhone||'';
+  const slots=freeSlots(addDate);
+  const ok=addName&&addPhone&&addDate&&addTime;
+  return`<div class="modal-bg" onclick="if(event.target===this){showAddModal=false;render()}">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <h3 style="font-size:16px;font-weight:700">${tt.addManual}</h3>
+        <button onclick="showAddModal=false;render()" style="background:transparent;border:none;color:#555;cursor:pointer;font-size:20px;line-height:1">×</button>
+      </div>
+      <label class="lbl">${tt.date}</label>
+      <input type="date" value="${addDate}" onchange="window._addDate=this.value;window._addTime='';render()" style="margin-bottom:12px">
+      <label class="lbl">${tt.time}</label>
+      ${slots.length===0?`<p style="font-size:12px;color:#555;margin-bottom:12px">${tt.noSlots}</p>`:`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:12px;max-height:90px;overflow-y:auto">${slots.map(s=>`<button class="slot${addTime===s?' sel':''}" onclick="window._addTime='${s}';render()" style="font-size:12px;padding:7px 2px">${s}</button>`).join('')}</div>`}
+      <label class="lbl">${tt.name}</label>
+      <input value="${addName}" oninput="window._addName=this.value" style="margin-bottom:12px">
+      <label class="lbl">${tt.phone}</label>
+      <input value="${addPhone}" oninput="window._addPhone=this.value" type="tel" dir="ltr" style="margin-bottom:16px">
+      <button onclick="doAddManual()" style="width:100%;padding:12px;border-radius:12px;border:none;background:${ok?GOLD:'#222'};color:${ok?'#000':'#555'};font-size:14px;font-weight:700;cursor:${ok?'pointer':'not-allowed'};font-family:inherit">${tt.save}</button>
+    </div>
+  </div>`;
+}
+
+// ── Event handlers ──
+function setStep(s){step=s;render()}
+function navBack(to){
+  if(to==='home')step='home';
+  else if(to==='date')step='date';
+  else if(to==='time')step='time';
+  render();
+}
+function toggleLang(){lang=lang==='he'?'en':'he';document.body.dir=dir();render()}
+function goAdminLogin(){view='adminlogin';render()}
+function clientSelDate(ds){selDate=ds;render()}
+function selTimeClick(s){selTime=s;render()}
+function calPrev(){if(calViewDate.m===0){calViewDate={y:calViewDate.y-1,m:11}}else{calViewDate.m--;}render()}
+function calNext(){if(calViewDate.m===11){calViewDate={y:calViewDate.y+1,m:0}}else{calViewDate.m++;}render()}
+function adminCalPrev(){if(adminCalViewDate.m===0){adminCalViewDate={y:adminCalViewDate.y-1,m:11}}else{adminCalViewDate.m--;}render()}
+function adminCalNext(){if(adminCalViewDate.m===11){adminCalViewDate={y:adminCalViewDate.y+1,m:0}}else{adminCalViewDate.m++;}render()}
+function adminSelCal(ds){adminCalSel=adminCalSel===ds?null:ds;render()}
+function updateConfirmBtn(){const btn=document.getElementById('confirmBtn');if(btn)btn.style.opacity=clientName.trim()&&clientPhone.trim()?1:.4}
+function doLookup(){const v=document.getElementById('myPhoneInp');if(v)myPhone=v.value;const found=appointments.filter(a=>a.phone===myPhone.trim()&&a.status!=='cancelled');myAppts=found.sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));render()}
+function resetLookup(){myAppts=null;myPhone='';cancelMsg='';render()}
+function doCancel(id){
+  const a=appointments.find(x=>x.id===id);
+  if(!a)return;
+  if(within24h(a.date,a.time)){cancelMsg=t().cannotCancel;render();return;}
+  appointments=appointments.map(x=>x.id===id?{...x,status:'cancelled'}:x);
+  myAppts=myAppts.filter(x=>x.id!==id);
+  saveAppts();cancelMsg='';render();
+}
+async function doBook(){
+  if(!clientName.trim()||!clientPhone.trim())return;
+  const a={id:genId(),clientName:clientName.trim(),phone:clientPhone.trim(),date:selDate,time:selTime,status:'pending',createdAt:new Date().toISOString()};
+  appointments=[...appointments,a];
+  await saveAppts();step='done';render();
+}
+function resetBooking(){step='home';selDate=null;selTime=null;clientName='';clientPhone='';render()}
+function doLogin(){
+  if(adminPassInput===PASS){view='admin';localSettings=JSON.parse(JSON.stringify(settings));loginErr=false;try{window.storage.set('la-adm','true')}catch{}}
+  else{loginErr=true;}render();
+}
+async function doLogout(){view='client';step='home';try{await window.storage.delete('la-adm')}catch{} render()}
+function doApprove(id){appointments=appointments.map(a=>a.id===id?{...a,status:'approved'}:a);saveAppts();render()}
+function doCancelAdmin(id){appointments=appointments.map(a=>a.id===id?{...a,status:'cancelled'}:a);saveAppts();render()}
+function toggleDay(i){const ls=localSettings;if(ls.workingDays.includes(i))ls.workingDays=ls.workingDays.filter(d=>d!==i);else ls.workingDays=[...ls.workingDays,i].sort();render()}
+function addBlock(){if(!newBlock)return;const ls=localSettings;if(!ls.blockedDates.includes(newBlock))ls.blockedDates=[...ls.blockedDates,newBlock];newBlock='';render()}
+function removeBlock(d){localSettings.blockedDates=localSettings.blockedDates.filter(x=>x!==d);render()}
+async function doSaveSettings(){settings=JSON.parse(JSON.stringify(localSettings));await saveSettings();saveFlash=true;render();setTimeout(()=>{saveFlash=false;render()},2000)}
+async function doAddManual(){
+  const addDate=window._addDate||todayStr();
+  const addTime=window._addTime||'';
+  const addName=window._addName||'';
+  const addPhone=window._addPhone||'';
+  if(!addName||!addPhone||!addDate||!addTime)return;
+  const a={id:genId(),clientName:addName,phone:addPhone,date:addDate,time:addTime,status:'approved',createdAt:new Date().toISOString()};
+  appointments=[...appointments,a];
+  await saveAppts();
+  showAddModal=false;window._addDate=null;window._addTime=null;window._addName=null;window._addPhone=null;render();
+}
+function bindEvents(){}
+
+// Boot
+loadData();
+</script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</body>
+</html>
